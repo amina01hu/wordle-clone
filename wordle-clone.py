@@ -6,23 +6,37 @@ list = ['rebus', 'siege', 'banal', 'gorge', 'query', 'abbey', 'proxy', 'aloft']
 pygame.init()
 screen = pygame.display.set_mode((633, 900))
 clock = pygame.time.Clock()
-text_font = pygame.font.Font('font/testFont.ttf', 40)
+text_font = pygame.font.Font('font/testFont.ttf', 30)
 all_guesses = [[]] # all guess
+matching_letters = []
+location_letters = []
+win_word = "JOKES"
+
 
 def drawSquares():
     rows = 6
     letters = 5
     x_pos = 148
     y_pos = 100
+    box_width = 2
+    box_colour = (120, 124, 127)
     for i in range(rows):
         for j in range(letters):
-            pygame.draw.rect(screen, (120, 124, 127), (x_pos, y_pos, 62, 62), 2)
+            pygame.draw.rect(screen, (211, 214, 218), (x_pos, y_pos, 62, 62), 2)
             if i < len(all_guesses):
                 if j < len(all_guesses[i]):  # Only draw letters for the current row
-                    letter_surface = text_font.render(all_guesses[i][j], False, (0, 0, 0))
+                    if len(matching_letters) > i and len(matching_letters[i]) == 5: 
+                        box_colour =  matching_letters[i][j][1]
+                        box_width = 0
+                        text_colour = (255,255,255)
+                    else:
+                        box_colour = (120, 124, 127)
+                        box_width = 2
+                        text_colour = (0, 0, 0)
+                    pygame.draw.rect(screen, box_colour, (x_pos, y_pos, 62, 62), box_width)
+                    letter_surface = text_font.render(all_guesses[i][j], True, text_colour)
                     letter_rect = letter_surface.get_rect(center=(x_pos + 31, y_pos + 35))
                     screen.blit(letter_surface, letter_rect)
-                # x_pos = 148
             x_pos += 70
         x_pos = 148
         y_pos += 70
@@ -103,7 +117,17 @@ def addLetter(letter):
     else:
         print("you have already guesses 5 times")
         
-        
+def storeWord(word):
+    colours = []
+    for idx, letter in enumerate(word):
+        if letter == win_word[idx]:
+            colours.append([letter, (108, 169, 101)])
+        elif letter in win_word:
+            colours.append([letter, (200, 182, 83)])
+        else: 
+            colours.append([letter, (120, 124, 127)])
+    matching_letters.append(colours) 
+    
 def removeLetter():
     # check if all_guesses is not empty
     if all_guesses:
@@ -122,6 +146,7 @@ def checkWord():
     if all_guesses:
         # check if the last guess has 5 letters
         if len(all_guesses[-1]) == 5:
+            storeWord(all_guesses[-1])
             if "".join(all_guesses[-1]) == "JOKES":
                 print("You win")
                 return False
@@ -158,18 +183,10 @@ while True:
                 # draw starting squares
                 drawSquares()
                 # get keyboard input
-                game_active = getKeyPressed()
+                game_won = getKeyPressed()
             else:
                 pygame.quit()
                 exit()
-                
-                
-                
-            
-                
-                
-                
-                
-                
+                      
     pygame.display.update()
     clock.tick(60)
