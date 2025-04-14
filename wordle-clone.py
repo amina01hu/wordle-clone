@@ -1,12 +1,14 @@
 import pygame
+import numpy as np
 from sys import exit
 
 list = ['rebus', 'siege', 'banal', 'gorge', 'query', 'abbey', 'proxy', 'aloft']
 pygame.init()
 screen = pygame.display.set_mode((633, 900))
 clock = pygame.time.Clock()
-text_font = pygame.font.Font('font/testFont.ttf', 50)
-guess = []
+text_font = pygame.font.Font('font/testFont.ttf', 40)
+all_guesses = [] # all guess
+guess = [] # word
 
 def drawSquares():
     rows = 6
@@ -16,10 +18,12 @@ def drawSquares():
     for i in range(rows):
         for j in range(letters):
             pygame.draw.rect(screen, (120, 124, 127), (x_pos, y_pos, 62, 62), 2)
-            if i == 0 and j < len(guess):  # Only draw letters for the current row
-                letter_surface = text_font.render(guess[j], False, (0, 0, 0))
-                letter_rect = letter_surface.get_rect(center=(x_pos + 31, y_pos + 40))
-                screen.blit(letter_surface, letter_rect)
+            if i < len(all_guesses):
+                if j < len(all_guesses[i]):  # Only draw letters for the current row
+                    letter_surface = text_font.render(all_guesses[i][j], False, (0, 0, 0))
+                    letter_rect = letter_surface.get_rect(center=(x_pos + 31, y_pos + 35))
+                    screen.blit(letter_surface, letter_rect)
+                # x_pos = 148
             x_pos += 70
         x_pos = 148
         y_pos += 70
@@ -86,35 +90,54 @@ def getKeyPressed():
     return True
 
 def addLetter(letter):
-    if len(guess) < 5:
-        guess.append(letter)
-        print(letter)
-        print(guess)
+    # check if all_guess is not full
+    if len(all_guesses) < 6:
+        # check if all_guesses is empty or if the last guess has 5 letters
+        if not all_guesses or all_guesses[-1][-1] == "\n" or len(all_guesses[-1]) < 5:
+            # append empty array to all_guesses
+            all_guesses.append([])
+            # append letter to last array in all_guesses
+            all_guesses[-1].append(letter)
+            print(all_guesses[-1])
+            print(all_guesses)
+        else:
+            print("last guess is full")
+        
     else:
-        print("filled")
-    # for i in range(rows):
-    #     for j in range(letters):
-    #         pygame.draw.rect(screen, (120, 124, 127), (x_pos, y_pos, 62, 62), 2)
-    #         x_pos += 70
-    #     x_pos = 148
-    #     y_pos += 70
-    
+        print("you have already guesses 5 times")
+        
+        
 def removeLetter():
-    if guess:
-        guess.pop()
-        print(guess)
+    # check if all_guesses is not empty
+    if all_guesses:
+        # check if last guesses is not empty
+        if all_guesses[-1]:
+            # remove last letter in last guess
+            all_guesses[-1].pop()
+            print(all_guesses[-1])
+        else:
+            "word empty"
     else:
-        print("empty")
+        print("all_guesses array empty")
 
 def checkWord():
-    if guess and len(guess) == 5:
-        if "".join(guess) == "WEIRD":
-            print("You win")
-            return False
+    # check if all_guesses is not empty 
+    if all_guesses:
+        # check if the last guess has 5 letters
+        if len(all_guesses[-1]) == 5:
+            if "".join(all_guesses[-1]) == "JOKES":
+                print("You win")
+                return False
+            else:
+                # append new array for new word
+                #all_guesses.append([])
+                print(all_guesses)
+                print("Try again")
+            all_guesses[-1].append("\n")
         else:
-            print("Try again")
+            print("word not complete, len: ", len(all_guesses[-1]))
     else:
-        print("word not complete, len: ", len(guess))
+        print("Please enter word first")
     return True
 
 game_active = True
