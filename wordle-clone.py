@@ -7,8 +7,7 @@ pygame.init()
 screen = pygame.display.set_mode((633, 900))
 clock = pygame.time.Clock()
 text_font = pygame.font.Font('font/testFont.ttf', 40)
-all_guesses = [] # all guess
-guess = [] # word
+all_guesses = [[]] # all guess
 
 def drawSquares():
     rows = 6
@@ -91,11 +90,9 @@ def getKeyPressed():
 
 def addLetter(letter):
     # check if all_guess is not full
-    if len(all_guesses) < 6:
+    if len(all_guesses) < 7:
         # check if all_guesses is empty or if the last guess has 5 letters
-        if not all_guesses or all_guesses[-1][-1] == "\n" or len(all_guesses[-1]) < 5:
-            # append empty array to all_guesses
-            all_guesses.append([])
+        if len(all_guesses[-1]) < 5:
             # append letter to last array in all_guesses
             all_guesses[-1].append(letter)
             print(all_guesses[-1])
@@ -129,11 +126,14 @@ def checkWord():
                 print("You win")
                 return False
             else:
-                # append new array for new word
-                #all_guesses.append([])
-                print(all_guesses)
-                print("Try again")
-            all_guesses[-1].append("\n")
+                # if it does not match, check if all turns are up
+                if len(all_guesses) != 6:
+                    all_guesses.append([])
+                    print(all_guesses)
+                    print("Try again")
+                else: 
+                    print("Game Over")
+                    return False
         else:
             print("word not complete, len: ", len(all_guesses[-1]))
     else:
