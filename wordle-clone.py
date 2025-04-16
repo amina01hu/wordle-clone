@@ -71,6 +71,29 @@ def animateGuess(current_row, current_word):
             screen.set_clip(None)
             pygame.display.update()
             
+def animateLetter(current_row, current_word):
+    # make box and letter pop
+    scale_factor = 62
+    if current_row > 0 and len(current_word) < 6:
+        x_pos = 148 + (70 * (len(current_word) - 1))
+        y_pos = 100 + (70 * (current_row - 1))
+        for i in range(20):
+            pygame.time.delay(5)
+            pygame.draw.rect(screen, (255, 255, 255), (x_pos + (62 - scale_factor) // 2, y_pos + (62 - scale_factor) // 2, scale_factor, scale_factor), 0) 
+            if i < 10:
+                scale_factor += 2
+            else:
+                scale_factor -= 2
+            pygame.draw.rect(screen, (120, 124, 127), (x_pos + (62 - scale_factor) // 2, y_pos + (62 - scale_factor) // 2, scale_factor, scale_factor), 2)
+            letter_surface = text_font.render(current_word[-1], True, (0, 0, 0))
+            updated = scale_factor / 62
+            scaled_letter = pygame.transform.scale(letter_surface, (int(letter_surface.get_width() * updated), int(letter_surface.get_height() * updated)))
+            letter_rect = scaled_letter.get_rect(center=(x_pos + 31, y_pos + 35))
+            screen.blit(scaled_letter, letter_rect)
+            pygame.display.update()
+            
+                
+        
     
     
     
@@ -143,6 +166,7 @@ def addLetter(letter):
         if len(all_guesses[-1]) < 5:
             # append letter to last array in all_guesses
             all_guesses[-1].append(letter)
+            animateLetter(len(all_guesses), all_guesses[-1])
             print(all_guesses[-1])
             print(all_guesses)
         else:
