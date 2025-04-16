@@ -41,6 +41,33 @@ def drawSquares():
         x_pos = 148
         y_pos += 70
 
+def animateGuess(current_row, current_word):
+    # create box animation 
+    for idx, letter in enumerate(current_word):
+        print("Current Row: ", current_row, " Current Word: ", current_word)
+        x_pos = 148 + (70 * idx)
+        y_pos = 100 + (70 * (current_row - 1))
+        height = 62
+        box_width = 2
+        box_colour = (120, 124, 127)
+        for i in range(10):
+            pygame.time.delay(50)
+            # redraw background before printing new square
+            pygame.draw.rect(screen, (255, 255, 255), (x_pos, y_pos, 62, 62), 0) 
+            if i < 5:
+                height -= 12
+            else:
+                height += 12
+                box_width = 2
+                box_colour = matching_letters[current_row - 1][idx][1]
+            pygame.draw.rect(screen, box_colour, (x_pos, y_pos + (62 - height) // 2, 62, height), 0)
+            pygame.display.update()
+            print("height of cube ", height)
+            
+    
+    
+    
+    
 
 def getKeyPressed():
     if event.type == pygame.KEYDOWN:
@@ -147,9 +174,9 @@ def checkWord():
         # check if the last guess has 5 letters
         if len(all_guesses[-1]) == 5:
             storeWord(all_guesses[-1])
+            current_word, current_row = all_guesses[-1], len(all_guesses)
             if "".join(all_guesses[-1]) == "JOKES":
                 print("You win")
-                return False
             else:
                 # if it does not match, check if all turns are up
                 if len(all_guesses) != 6:
@@ -158,7 +185,9 @@ def checkWord():
                     print("Try again")
                 else: 
                     print("Game Over")
-                    return False
+            # put animation here
+            animateGuess(current_row, current_word)
+            return False
         else:
             print("word not complete, len: ", len(all_guesses[-1]))
     else:
