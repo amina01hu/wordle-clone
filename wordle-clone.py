@@ -6,7 +6,7 @@ list = ['rebus', 'siege', 'banal', 'gorge', 'query', 'abbey', 'proxy', 'aloft']
 pygame.init()
 screen = pygame.display.set_mode((633, 900))
 clock = pygame.time.Clock()
-text_font = pygame.font.Font('font/testFont.ttf', 30)
+text_font = pygame.font.Font('font/testFont.ttf', 35)
 all_guesses = [[]] # all guess
 matching_letters = []
 location_letters = []
@@ -50,19 +50,26 @@ def animateGuess(current_row, current_word):
         height = 62
         box_width = 2
         box_colour = (120, 124, 127)
-        for i in range(10):
-            pygame.time.delay(50)
-            # redraw background before printing new square
+        letter_colour = (0, 0, 0)
+        for i in range(40):
+            pygame.time.delay(15)
+            # redraw background before printing new square animation
             pygame.draw.rect(screen, (255, 255, 255), (x_pos, y_pos, 62, 62), 0) 
-            if i < 5:
-                height -= 12
+            if i < 20:
+                height -= 3
             else:
-                height += 12
-                box_width = 2
+                height += 3
+                box_width = 0
                 box_colour = matching_letters[current_row - 1][idx][1]
-            pygame.draw.rect(screen, box_colour, (x_pos, y_pos + (62 - height) // 2, 62, height), 0)
+                letter_colour = (255, 255, 255)
+            pygame.draw.rect(screen, box_colour, (x_pos, y_pos + (62 - height) // 2, 62, height), box_width)
+            letter_surface = text_font.render(letter, True, letter_colour)
+            letter_rect = letter_surface.get_rect(center=(x_pos + 31, y_pos + 35))
+            letter_crop = pygame.Rect(x_pos, y_pos + (62 - height) // 2, 62, height)
+            screen.set_clip(letter_crop)
+            screen.blit(letter_surface, letter_rect)
+            screen.set_clip(None)
             pygame.display.update()
-            print("height of cube ", height)
             
     
     
