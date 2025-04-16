@@ -7,6 +7,8 @@ pygame.init()
 screen = pygame.display.set_mode((633, 900))
 clock = pygame.time.Clock()
 text_font = pygame.font.Font('font/testFont.ttf', 35)
+key_font = pygame.font.Font('font/franklin.ttf', 20)
+bigger_key = pygame.font.Font('font/franklin.ttf', 14)
 all_guesses = [[]] # all guess
 matching_letters = []
 location_letters = []
@@ -92,12 +94,42 @@ def animateLetter(current_row, current_word):
             screen.blit(scaled_letter, letter_rect)
             pygame.display.update()
             
-                
-        
-    
-    
-    
-    
+def drawKeyboard():
+    # draw first row
+    first_row = ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"]
+    second_row = ["A", "S", "D", "F", "G", "H", "J", "K", "L"]
+    third_row = ["ENTER", "Z", "X", "C", "V", "B", "N", "M", "BACK"]
+    x_pos = 104
+    y_pos = 570
+    for i in first_row:
+        key = pygame.draw.rect(screen, (211, 214, 218), (x_pos, y_pos, 38, 50), 0, 3) 
+        letter_surface = key_font.render(i, True, (0, 0, 0))
+        letter_rect = letter_surface.get_rect(center=(key.centerx, (key.centery - 2)))
+        screen.blit(letter_surface, letter_rect)
+        x_pos += 43  
+    x_pos = 125
+    y_pos = 628 
+    for i in second_row:
+        pygame.draw.rect(screen, (211, 214, 218), (x_pos, y_pos, 38, 50), 0, 3) 
+        key = pygame.draw.rect(screen, (211, 214, 218), (x_pos, y_pos, 38, 50), 0, 3) 
+        letter_surface = key_font.render(i, True, (0, 0, 0))
+        letter_rect = letter_surface.get_rect(center=(key.centerx, (key.centery - 2)))
+        screen.blit(letter_surface, letter_rect)
+        x_pos += 43  
+    x_pos = 104
+    y_pos = 686
+    for i in third_row:
+        if i == "ENTER" or i == "BACK":
+            key = pygame.draw.rect(screen, (211, 214, 218), (x_pos, y_pos, 58, 50), 0, 3) 
+            letter_surface = bigger_key.render(i, True, (0, 0, 0))
+            letter_rect = letter_surface.get_rect(center=(key.centerx, (key.centery)))
+            x_pos += 64
+        else:
+            key = pygame.draw.rect(screen, (211, 214, 218), (x_pos, y_pos, 38, 50), 0, 3) 
+            letter_surface = key_font.render(i, True, (0, 0, 0))
+            letter_rect = letter_surface.get_rect(center=(key.centerx, (key.centery - 2)))
+            x_pos += 43  
+        screen.blit(letter_surface, letter_rect)    
 
 def getKeyPressed():
     if event.type == pygame.KEYDOWN:
@@ -242,6 +274,8 @@ while True:
                 screen.fill((255, 255, 255))
                 # draw starting squares
                 drawSquares()
+                # draw keyboard
+                drawKeyboard()
                 # get keyboard input
                 game_won = getKeyPressed()
             else:
