@@ -81,7 +81,8 @@ def animateLetter(current_row, current_word):
         y_pos = 100 + (70 * (current_row - 1))
         for i in range(20):
             pygame.time.delay(5)
-            pygame.draw.rect(screen, (255, 255, 255), (x_pos + (62 - scale_factor) // 2, y_pos + (62 - scale_factor) // 2, scale_factor, scale_factor), 0) 
+            pygame.draw.rect(screen, (255, 255, 255), 
+                             (x_pos + (62 - scale_factor) // 2, y_pos + (62 - scale_factor) // 2, scale_factor, scale_factor), 0) 
             if i < 10:
                 scale_factor += 2
             else:
@@ -94,7 +95,21 @@ def animateLetter(current_row, current_word):
             screen.blit(scaled_letter, letter_rect)
             pygame.display.update()
   
-# def errorAnimate(current, current_word):
+def errorAnimate(current_row, current_word):
+    # make row shake
+    x_pos = 148
+    y_pos = 100 + (70 * (current_row - 1))
+    for i in range(20):
+        for i in range(5):
+            # pygame.time.delay(10)
+            pygame.draw.rect(screen, (255, 255, 255), 
+                                (x_pos, y_pos, 62, 62), 0) 
+            x_pos += 70
+            pygame.display.update()
+        
+        
+        
+    
     
           
 def drawKeyboard():
@@ -281,7 +296,8 @@ def checkWord():
             animateGuess(current_row, current_word)
             return False
         else:
-            print("word not complete, len: ", len(all_guesses[-1]))
+            print("word not long enough")
+            errorAnimate(len(all_guesses), all_guesses[-1])
     else:
         print("Please enter word first")
     return True
