@@ -11,7 +11,7 @@ key_font = pygame.font.Font('font/franklin.ttf', 20)
 bigger_key = pygame.font.Font('font/franklin.ttf', 14)
 all_guesses = [[]] # all guess
 matching_letters = []
-location_letters = []
+all_rect = []
 win_word = "JOKES"
 
 
@@ -93,43 +93,53 @@ def animateLetter(current_row, current_word):
             letter_rect = scaled_letter.get_rect(center=(x_pos + 31, y_pos + 35))
             screen.blit(scaled_letter, letter_rect)
             pygame.display.update()
-            
+  
+# def errorAnimate(current, current_word):
+    
+          
 def drawKeyboard():
     # draw first row
-    first_row = ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"]
-    second_row = ["A", "S", "D", "F", "G", "H", "J", "K", "L"]
-    third_row = ["ENTER", "Z", "X", "C", "V", "B", "N", "M", "BACK"]
+    all_keys = ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", 
+                 "A", "S", "D", "F", "G", "H", "J", "K", "L", 
+                 "ENTER", "Z", "X", "C", "V", "B", "N", "M", "BACK"]
     x_pos = 104
     y_pos = 570
-    for i in first_row:
-        key = pygame.draw.rect(screen, (211, 214, 218), (x_pos, y_pos, 38, 50), 0, 3) 
-        letter_surface = key_font.render(i, True, (0, 0, 0))
-        letter_rect = letter_surface.get_rect(center=(key.centerx, (key.centery - 2)))
-        screen.blit(letter_surface, letter_rect)
-        x_pos += 43  
-    x_pos = 125
-    y_pos = 628 
-    for i in second_row:
-        pygame.draw.rect(screen, (211, 214, 218), (x_pos, y_pos, 38, 50), 0, 3) 
-        key = pygame.draw.rect(screen, (211, 214, 218), (x_pos, y_pos, 38, 50), 0, 3) 
-        letter_surface = key_font.render(i, True, (0, 0, 0))
-        letter_rect = letter_surface.get_rect(center=(key.centerx, (key.centery - 2)))
-        screen.blit(letter_surface, letter_rect)
-        x_pos += 43  
-    x_pos = 104
-    y_pos = 686
-    for i in third_row:
+    for i in all_keys:
+        box_colour = (211, 214, 218)
+        text_colour = (0, 0, 0)
+        increase_width = 43 # how much x_pos will be increased by 
+        box_width = 38 # how much the width of the box will be
+        current_text = key_font # setting font
+        # setting the colour of box
+        if len(matching_letters) > 0:
+            for idx, val in enumerate(matching_letters):
+                for j in val:
+                    if i == j[0]:
+                        box_colour = j[1]
+                        text_colour = (255, 255, 255)
+                        if box_colour == (108, 169, 101):
+                            break
+                else:
+                    continue
+                break
+
+        if i == 'A':
+            x_pos = 125
+            y_pos = 628
+        elif i == 'ENTER':
+            x_pos = 104
+            y_pos = 686
         if i == "ENTER" or i == "BACK":
-            key = pygame.draw.rect(screen, (211, 214, 218), (x_pos, y_pos, 58, 50), 0, 3) 
-            letter_surface = bigger_key.render(i, True, (0, 0, 0))
-            letter_rect = letter_surface.get_rect(center=(key.centerx, (key.centery)))
-            x_pos += 64
-        else:
-            key = pygame.draw.rect(screen, (211, 214, 218), (x_pos, y_pos, 38, 50), 0, 3) 
-            letter_surface = key_font.render(i, True, (0, 0, 0))
-            letter_rect = letter_surface.get_rect(center=(key.centerx, (key.centery - 2)))
-            x_pos += 43  
-        screen.blit(letter_surface, letter_rect)    
+            increase_width = 64
+            box_width = 58
+            current_text = bigger_key
+        key = pygame.draw.rect(screen, box_colour, (x_pos, y_pos, box_width, 50), 0, 3) 
+        if len(all_rect) < 28:
+            all_rect.append((i, key)) # append the rect to the array to track collision
+        letter_surface = current_text.render(i, True, text_colour)
+        letter_rect = letter_surface.get_rect(center=(key.centerx, (key.centery - 2)))
+        screen.blit(letter_surface, letter_rect)
+        x_pos += increase_width 
 
 def getKeyPressed():
     if event.type == pygame.KEYDOWN:
@@ -191,6 +201,17 @@ def getKeyPressed():
             return checkWord()
     return True
 
+def keyboardInput():
+    if event.type == pygame.MOUSEBUTTONDOWN:
+        for i, val in enumerate(all_rect):
+            if val[1].collidepoint(event.pos):
+                if val[0] == "ENTER":
+                    checkWord()
+                elif val[0] == "BACK":
+                    removeLetter()
+                else:
+                    addLetter(val[0])
+
 def addLetter(letter):
     # check if all_guess is not full
     if len(all_guesses) < 7:
@@ -208,14 +229,22 @@ def addLetter(letter):
         print("you have already guesses 5 times")
         
 def storeWord(word):
+    # if verify the yellow parts
     colours = []
+    indexes = []
+    current_colour = (120, 124, 127)
     for idx, letter in enumerate(word):
-        if letter == win_word[idx]:
-            colours.append([letter, (108, 169, 101)])
-        elif letter in win_word:
-            colours.append([letter, (200, 182, 83)])
-        else: 
-            colours.append([letter, (120, 124, 127)])
+        current_colour = (120, 124, 127)
+        if letter == win_word[idx]: # letter is at the currnet index
+            current_colour = (108, 169, 101)
+        elif letter in win_word: # letter is somewhere in the word
+            indexes = [i for i, val in enumerate(win_word) if val == letter] # get the index of the letter in correct word
+            for index in indexes:
+                if word[index] != win_word[index]:
+                    current_colour = (200, 182, 83)
+                else:
+                    current_colour = (120, 124, 127)
+        colours.append([letter, current_colour])
     matching_letters.append(colours) 
     
 def removeLetter():
@@ -277,6 +306,7 @@ while True:
                 # draw keyboard
                 drawKeyboard()
                 # get keyboard input
+                keyboardInput()
                 game_won = getKeyPressed()
             else:
                 pygame.quit()
