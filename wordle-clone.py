@@ -2,17 +2,19 @@ import pygame
 import numpy as np
 from sys import exit
 
-list = ['rebus', 'siege', 'banal', 'gorge', 'query', 'abbey', 'proxy', 'aloft']
+list = ['rebus', 'siege', 'banal', 'gorge', 'query', 'abbey', 'proxy', 'aloft, gauge']
 pygame.init()
 screen = pygame.display.set_mode((633, 900))
 clock = pygame.time.Clock()
 text_font = pygame.font.Font('font/testFont.ttf', 35)
 key_font = pygame.font.Font('font/franklin.ttf', 20)
 bigger_key = pygame.font.Font('font/franklin.ttf', 14)
+error_Font = pygame.font.Font('font/testFont.ttf', 20)
+title_font = pygame.font.Font('font/testFont.ttf', 30)
 all_guesses = [[]] # all guess
 matching_letters = []
 all_rect = []
-win_word = "JOKES"
+win_word = "CHINO"
 
 
 def drawSquares():
@@ -80,13 +82,13 @@ def animateLetter(current_row, current_word):
         x_pos = 148 + (70 * (len(current_word) - 1))
         y_pos = 100 + (70 * (current_row - 1))
         for i in range(20):
-            pygame.time.delay(5)
+            pygame.time.delay(3)
             pygame.draw.rect(screen, (255, 255, 255), 
                              (x_pos + (62 - scale_factor) // 2, y_pos + (62 - scale_factor) // 2, scale_factor, scale_factor), 0) 
             if i < 10:
-                scale_factor += 2
+                scale_factor += 1
             else:
-                scale_factor -= 2
+                scale_factor -= 1
             pygame.draw.rect(screen, (120, 124, 127), (x_pos + (62 - scale_factor) // 2, y_pos + (62 - scale_factor) // 2, scale_factor, scale_factor), 2)
             letter_surface = text_font.render(current_word[-1], True, (0, 0, 0))
             updated = scale_factor / 62
@@ -94,23 +96,6 @@ def animateLetter(current_row, current_word):
             letter_rect = scaled_letter.get_rect(center=(x_pos + 31, y_pos + 35))
             screen.blit(scaled_letter, letter_rect)
             pygame.display.update()
-  
-def errorAnimate(current_row, current_word):
-    # make row shake
-    x_pos = 148
-    y_pos = 100 + (70 * (current_row - 1))
-    for i in range(20):
-        for i in range(5):
-            # pygame.time.delay(10)
-            pygame.draw.rect(screen, (255, 255, 255), 
-                                (x_pos, y_pos, 62, 62), 0) 
-            x_pos += 70
-            pygame.display.update()
-        
-        
-        
-    
-    
           
 def drawKeyboard():
     # draw first row
@@ -151,6 +136,9 @@ def drawKeyboard():
         key = pygame.draw.rect(screen, box_colour, (x_pos, y_pos, box_width, 50), 0, 3) 
         if len(all_rect) < 28:
             all_rect.append((i, key)) # append the rect to the array to track collision
+        title_surface = title_font.render("Wordle", True, (0, 0, 0))
+        title_rect = title_surface.get_rect(center = (316, 50))
+        screen.blit(title_surface, title_rect)
         letter_surface = current_text.render(i, True, text_colour)
         letter_rect = letter_surface.get_rect(center=(key.centerx, (key.centery - 2)))
         screen.blit(letter_surface, letter_rect)
@@ -282,7 +270,7 @@ def checkWord():
         if len(all_guesses[-1]) == 5:
             storeWord(all_guesses[-1])
             current_word, current_row = all_guesses[-1], len(all_guesses)
-            if "".join(all_guesses[-1]) == "JOKES":
+            if "".join(all_guesses[-1]) == win_word:
                 print("You win")
             else:
                 # if it does not match, check if all turns are up
@@ -296,8 +284,32 @@ def checkWord():
             animateGuess(current_row, current_word)
             return False
         else:
-            print("word not long enough")
-            errorAnimate(len(all_guesses), all_guesses[-1])
+            alpha_change = 255
+            bg_title = pygame.Surface((200, 50), pygame.SRCALPHA)
+            for i in range(40):
+                while alpha_change > 0:
+                    pygame.time.delay(50)
+                    # redraw background after each change
+                    screen.fill((255, 255, 255))
+                    drawSquares()
+                    drawKeyboard()
+                    
+                    # create background for text
+                    bg_title_rect = bg_title.get_rect(center=(316, 100))
+                    pygame.draw.rect(screen, (0, 0, 0, alpha_change), bg_title_rect, border_radius=20)
+                    
+                    # create surface for text
+                    letter_surface = key_font.render("Not enough letters", True, (255, 255, 255))
+                    text_surface = pygame.Surface(letter_surface.get_size(), pygame.SRCALPHA) # create a surface where you can change transparency
+                    text_surface.blit(letter_surface, (0, 0)) # blit the text onto that surface
+                    text_surface.set_alpha(alpha_change)
+                    letter_rect = text_surface.get_rect(center=(316, 100)) # get rect for text
+                    screen.blit(bg_title, bg_title_rect)
+                    screen.blit(text_surface, letter_rect)
+                    pygame.display.update()
+                    if alpha_change == 255:
+                        pygame.time.delay(1000)
+                    alpha_change -= 40
     else:
         print("Please enter word first")
     return True
