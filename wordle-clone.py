@@ -11,6 +11,8 @@ key_font = pygame.font.Font('font/franklin.ttf', 20)
 bigger_key = pygame.font.Font('font/franklin.ttf', 14)
 error_Font = pygame.font.Font('font/testFont.ttf', 20)
 title_font = pygame.font.Font('font/testFont.ttf', 30)
+error_image = pygame.transform.scale(pygame.image.load('assets/not_enough_error.png').convert_alpha(), (200, 50))
+error_rect = error_image.get_rect(center=(316, 100))
 all_guesses = [[]] # all guess
 matching_letters = []
 all_rect = []
@@ -285,31 +287,19 @@ def checkWord():
             return False
         else:
             alpha_change = 255
-            bg_title = pygame.Surface((200, 50), pygame.SRCALPHA)
+            error_image.set_alpha(alpha_change)
             for i in range(40):
                 while alpha_change > 0:
                     pygame.time.delay(50)
-                    # redraw background after each change
                     screen.fill((255, 255, 255))
                     drawSquares()
                     drawKeyboard()
-                    
-                    # create background for text
-                    bg_title_rect = bg_title.get_rect(center=(316, 100))
-                    pygame.draw.rect(screen, (0, 0, 0, alpha_change), bg_title_rect, border_radius=20)
-                    
-                    # create surface for text
-                    letter_surface = key_font.render("Not enough letters", True, (255, 255, 255))
-                    text_surface = pygame.Surface(letter_surface.get_size(), pygame.SRCALPHA) # create a surface where you can change transparency
-                    text_surface.blit(letter_surface, (0, 0)) # blit the text onto that surface
-                    text_surface.set_alpha(alpha_change)
-                    letter_rect = text_surface.get_rect(center=(316, 100)) # get rect for text
-                    screen.blit(bg_title, bg_title_rect)
-                    screen.blit(text_surface, letter_rect)
+                    error_image.set_alpha(alpha_change)
+                    screen.blit(error_image, error_rect)
                     pygame.display.update()
                     if alpha_change == 255:
                         pygame.time.delay(1000)
-                    alpha_change -= 40
+                    alpha_change -= 20
     else:
         print("Please enter word first")
     return True
