@@ -16,15 +16,41 @@ class Game:
         self.matching_letters = []
         self.animation_running = False
         self.animations = AnimationManager(self.screen, self)
+        self.current_display = DisplayScreen(self.screen, self)
         
         
     def run(self):
         while self.running:
-            self.draw()
-            self.handle_events()
-            self.update()
+            if self.current_display.get_game_display() == "START":
+                self.handle_start_screen_events()
+                self.current_display.draw_start_screen()
+            elif self.current_display.get_game_display() == "PLAY":
+                self.handle_events()
+                self.update()
+                self.draw()
+            elif self.current_display.get_game_display() == "END":
+                self.handle_end_screen_events()
+                self.current_display.draw_start_screen()
             self.clock.tick(60)
     
+    def handle_start_screen_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            elif not self.animation_running:
+                self.current_display.set_game_display("START")
+                
+    def handle_end_screen_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:  # Restart the game
+                    self.reset_game()
+                    self.current_display.set_game_display("START")
+                elif event.key == pygame.K_q:  # Quit the game
+                    self.running = False
+                
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -35,11 +61,16 @@ class Game:
     def update(self):
         pass 
     
+    def reset_game(self):
+        self.all_guesses = [[]]
+        self.matching_letters = []
+        
+        
     def draw(self):
         self.screen.fill((255, 255, 255))
-        self.board.draw(self.all_guesses, self.matching_letters)
+        self.board.draw()
         self.keyboard.draw(self.matching_letters)
-        pygame.display.update()
+        pygame.display.update() 
         
     def get_all_guesses(self):
         return self.all_guesses
@@ -61,15 +92,19 @@ class Board:
         self.columns = 5
         self.game = game
         self.text_font = pygame.font.Font('font/testFont.ttf', 35)
+        self.title_font = pygame.font.Font('font/testFont.ttf', 30)
         
     
-    def draw(self, all_guesses, matching_letters):
+    def draw(self):
         x_pos = 148
         y_pos = 100
         all_guesses = self.game.get_all_guesses()
         matching_letters = self.game.get_matching_letters()
         box_width = 2
         box_colour = (120, 124, 127)
+        title_surface = self.title_font.render("Wordle", True, (0, 0, 0))
+        title_rect = title_surface.get_rect(center = (316, 50))
+        self.screen.blit(title_surface, title_rect)
         for i in range(self.rows):
             for j in range(self.columns):
                 pygame.draw.rect(self.screen, (211, 214, 218), (x_pos, y_pos, 62, 62), 2)
@@ -380,8 +415,8 @@ class AnimationManager:
         for i in range(40):
             while self.alpha_change > 0:
                 pygame.time.delay(50)
-                # self.screen.fill((255, 255, 255))
-                self.game.board.draw()
+                self.screen.fill((255, 255, 255))
+                self.game.draw()
                 self.error_image.set_alpha(self.alpha_change)
                 self.screen.blit(self.error_image, self.error_rect)
                 pygame.display.update()
@@ -389,6 +424,49 @@ class AnimationManager:
                     pygame.time.delay(1000)
                 self.alpha_change -= 20
         self.game.animations_running = False
+
+class DisplayScreen:
+    def __init__(self, screen, game):
+        self.screen = screen
+        self.game = game
+        self.current_display = "START"
+        self.cube_surface = pygame.transform.scale(pygame.image.load("assets/wordle_cube.png").convert_alpha(), (80, 80))
+        self.cube_rect = self.cube_surface.get_rect(center=(316, 300))
+        self.title_font = pygame.font.Font('font/testFont.ttf', 50)
+        self.desc_font = pygame.font.Font('font/franklin.ttf', 20)
+        self.button_font = pygame.font.Font('font/franklin.ttf', 15)
+        
+    def set_game_display(self, current_display):
+        self.current_display = current_display
+    
+    def get_game_display(self):
+        return self.current_display 
+    
+    def draw_start_screen(self):  
+        # wordle cube
+        self.screen.fill((227, 227, 225))
+        self.screen.blit(self.cube_surface, self.cube_rect)
+        # title
+        title_surface = self.title_font.render("Wordle", True, (0, 0, 0))
+        title_rect = title_surface.get_rect(center = (316, 380))
+        self.screen.blit(title_surface, title_rect)
+        # game desc
+        desc_surface = self.desc_font.render("Get 6 chances to guess a 5-letter word", True, (0, 0, 0))
+        desc_rect = desc_surface.get_rect(center = (316, 425))
+        self.screen.blit(desc_surface, desc_rect)
+        # start buttons
+        play_button = pygame.draw.rect(self.screen, (0, 0, 0), (241, 465, 150, 40), 0, 20)
+        play_button_text = self.button_font.render("Play", True, (227, 227, 225))
+        self.screen.blit(play_button_text, play_button_text.get_rect(center=(play_button.centerx, play_button.centery - 2)))
+        # exit button
+        end_button = pygame.draw.rect(self.screen, (0, 0, 0), (241, 520, 150, 40), 1, 20)
+        end_button_text = self.button_font.render("Exit", True, (0, 0, 0))
+        self.screen.blit(end_button_text, end_button_text.get_rect(center=(end_button.centerx, end_button.centery - 2)))
+        
+        
+        
+        pygame.display.update()
+        
 
 # class WorldManager(pygame.sprite.Sprite):
 #     def __init__(self):
