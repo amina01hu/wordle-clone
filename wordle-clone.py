@@ -30,7 +30,8 @@ class Game:
                 self.draw()
             elif self.current_display.get_game_display() == "END":
                 self.handle_end_screen_events()
-                self.current_display.draw_start_screen()
+            elif self.current_display.get_game_display() == "QUIT":
+                self.running = False
             self.clock.tick(60)
     
     def handle_start_screen_events(self):
@@ -38,7 +39,8 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False
             elif not self.animation_running:
-                self.current_display.set_game_display("START")
+                self.current_display.update(event)
+                
                 
     def handle_end_screen_events(self):
         for event in pygame.event.get():
@@ -162,7 +164,7 @@ class Board:
                 self.store_word(all_guesses[-1], win_word)
                 current_word, current_row = all_guesses[-1], len(all_guesses)
                 if "".join(all_guesses[-1]) == win_word:
-                    print("You win")
+                    self.game.current_display.set_game_display("END")
                 else:
                     # if it does not match, check if all turns are up
                     if len(all_guesses) != 6:
@@ -170,7 +172,7 @@ class Board:
                         self.game.update_all_guesses(all_guesses)
                         print("Try again")
                     else: 
-                        print("Game Over")
+                        self.game.current_display.set_game_display("END")
                 # put animation here
                 self.game.animations.animate_guess(current_row, current_word)
             else:
@@ -425,6 +427,26 @@ class AnimationManager:
                 self.alpha_change -= 20
         self.game.animations_running = False
 
+
+class Button:
+    def __init__(self, label, rect, font, bg_colour, text_colour, box_type):
+        self.label = label
+        self.rect = rect
+        self.font = font
+        self.bg_colour = bg_colour
+        self.text_colour = text_colour
+        self.box_type = box_type
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, self.bg_colour, self.rect, self.box_type, 20)
+        text_surface = self.font.render(self.label, True, self.text_colour)
+        text_rect = text_surface.get_rect(center=self.rect.center)
+        screen.blit(text_surface, text_rect)
+        
+    def is_hovered(self, mouse_pos):
+        return self.rect.collidepoint(mouse_pos)
+        
+
 class DisplayScreen:
     def __init__(self, screen, game):
         self.screen = screen
@@ -435,12 +457,48 @@ class DisplayScreen:
         self.title_font = pygame.font.Font('font/testFont.ttf', 50)
         self.desc_font = pygame.font.Font('font/franklin.ttf', 20)
         self.button_font = pygame.font.Font('font/franklin.ttf', 15)
+        self.buttons = [
+            Button("Play", pygame.Rect(241, 465, 150, 40), self.button_font, (0, 0, 0), (227, 227, 225), 0),
+            Button("Exit", pygame.Rect(241, 515, 150, 40), self.button_font, (0, 0, 0), (0, 0, 0), 1),
+        ]
         
+    def run(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.game.running = False
+            elif self.current_display == "START":
+                self.update(event)
+                self.draw_start_screen()
+        
+                    
     def set_game_display(self, current_display):
         self.current_display = current_display
     
     def get_game_display(self):
         return self.current_display 
+    
+    def handle_mouse_input(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = event.pos
+            for button in self.buttons:
+                if button.is_hovered(mouse_pos):
+                    print("Click button")
+                    if button.label == "Play":
+                        self.set_game_display("PLAY")
+                    elif button.label == "Exit":
+                        self.game.running = False
+        
+    def mouse_tracking(self):
+        mouse_pos = pygame.mouse.get_pos()
+        for button in self.buttons:
+            if button.is_hovered(mouse_pos):
+                pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_HAND)
+                return
+        pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_ARROW) 
+    
+    def update(self, event):
+        self.handle_mouse_input(event)
+        self.mouse_tracking()
     
     def draw_start_screen(self):  
         # wordle cube
@@ -455,29 +513,12 @@ class DisplayScreen:
         desc_rect = desc_surface.get_rect(center = (316, 425))
         self.screen.blit(desc_surface, desc_rect)
         # start buttons
-        play_button = pygame.draw.rect(self.screen, (0, 0, 0), (241, 465, 150, 40), 0, 20)
-        play_button_text = self.button_font.render("Play", True, (227, 227, 225))
-        self.screen.blit(play_button_text, play_button_text.get_rect(center=(play_button.centerx, play_button.centery - 2)))
-        # exit button
-        end_button = pygame.draw.rect(self.screen, (0, 0, 0), (241, 520, 150, 40), 1, 20)
-        end_button_text = self.button_font.render("Exit", True, (0, 0, 0))
-        self.screen.blit(end_button_text, end_button_text.get_rect(center=(end_button.centerx, end_button.centery - 2)))
-        
-        
-        
+        for button in self.buttons:
+            button.draw(self.screen)
         pygame.display.update()
-        
 
-# class WorldManager(pygame.sprite.Sprite):
-#     def __init__(self):
-#         super().__init__()
-        
-        
-# class UIManager(pygame.sprite.Sprite):
-#     def __init__(self):
-#         super().__init__()
-    
-            
+
+           
 # def animateLetter(current_row, current_word):
 #     # make box and letter pop
 #     scale_factor = 62
