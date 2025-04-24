@@ -1,5 +1,6 @@
 import pygame
 import numpy as np
+import random
 from sys import exit
 
 class Game:
@@ -11,7 +12,9 @@ class Game:
         self.running = True
         self.board = Board(self.screen, self)
         self.keyboard = Keyboard(self.screen, self)
-        self.win_word = "CHINO"
+        self.game_won = False
+        self.rounds = 0
+        self.win_word = ""
         self.all_guesses = [[]]
         self.matching_letters = []
         self.animation_running = False
@@ -22,37 +25,46 @@ class Game:
     def run(self):
         while self.running:
             if self.current_display.get_game_display() == "START":
-                self.handle_start_screen_events()
+                self.handle_screen_events()
                 self.current_display.draw_start_screen()
             elif self.current_display.get_game_display() == "PLAY":
                 self.handle_events()
                 self.update()
                 self.draw()
+            elif self.current_display.get_game_display() == "PAUSE":
+                self.draw()
+                self.handle_screen_events()
+                self.current_display.draw_back_arrow()
             elif self.current_display.get_game_display() == "END":
-                self.handle_end_screen_events()
+                self.handle_screen_events()
+                self.current_display.draw_end_screen()
             elif self.current_display.get_game_display() == "QUIT":
                 self.running = False
+            pygame.display.update() 
             self.clock.tick(60)
     
-    def handle_start_screen_events(self):
+    def restart_game(self):
+        self.all_guesses = [[]]
+        self.matching_letters = []
+        if self.win_word != "":
+            self.rounds += 1
+            self.game_won = False
+        list = ['rebus', 'siege', 'banal', 'gorge', 'query', 'abbey', 'proxy', 'aloft, gauge']
+        self.win_word = random.choice(list).upper()
+    
+    def was_game_won(self):
+        return self.game_won
+    
+    def set_game_won(self, game_won):
+        self.game_won = game_won
+    
+    def handle_screen_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
             elif not self.animation_running:
                 self.current_display.update(event)
-                
-                
-    def handle_end_screen_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_r:  # Restart the game
-                    self.reset_game()
-                    self.current_display.set_game_display("START")
-                elif event.key == pygame.K_q:  # Quit the game
-                    self.running = False
-                
+                          
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -62,17 +74,12 @@ class Game:
            
     def update(self):
         pass 
-    
-    def reset_game(self):
-        self.all_guesses = [[]]
-        self.matching_letters = []
         
         
     def draw(self):
         self.screen.fill((255, 255, 255))
         self.board.draw()
         self.keyboard.draw(self.matching_letters)
-        pygame.display.update() 
         
     def get_all_guesses(self):
         return self.all_guesses
@@ -164,6 +171,7 @@ class Board:
                 self.store_word(all_guesses[-1], win_word)
                 current_word, current_row = all_guesses[-1], len(all_guesses)
                 if "".join(all_guesses[-1]) == win_word:
+                    self.game.set_game_won(True)
                     self.game.current_display.set_game_display("END")
                 else:
                     # if it does not match, check if all turns are up
@@ -175,6 +183,9 @@ class Board:
                         self.game.current_display.set_game_display("END")
                 # put animation here
                 self.game.animations.animate_guess(current_row, current_word)
+                self.game.draw()
+                if self.game.was_game_won():
+                    self.game.animations.animate_win(current_row, current_word)
             else:
                 print("word not long enough")
                 self.game.animations.animate_error()
@@ -215,6 +226,7 @@ class Keyboard:
         self.bigger_key = pygame.font.Font('font/franklin.ttf', 14)
         
     def draw(self, matching_letters):
+        
         x_pos = 104
         y_pos = 570
         for i in self.all_keys:
@@ -248,10 +260,7 @@ class Keyboard:
                 current_text = self.bigger_key
             key = pygame.draw.rect(self.screen, box_colour, (x_pos, y_pos, box_width, 50), 0, 3) 
             if len(self.all_rect) < 28:
-                self.all_rect.append((i, key)) # append the rect to the array to track collision
-            # title_surface = title_font.render("Wordle", True, (0, 0, 0))
-            # title_rect = title_surface.get_rect(center = (316, 50))
-            # screen.blit(title_surface, title_rect)
+                self.all_rect.append((i, key)) 
             letter_surface = current_text.render(i, True, text_colour)
             letter_rect = letter_surface.get_rect(center=(key.centerx, (key.centery - 2)))
             self.screen.blit(letter_surface, letter_rect)
@@ -427,6 +436,38 @@ class AnimationManager:
                 self.alpha_change -= 20
         self.game.animations_running = False
 
+    def animate_win(self, row, word):
+        self.game.animations_running = True
+        original_y_positions = []  # Store the original y positions of the boxes
+
+        # Calculate the positions of each box
+        for idx in range(len(word)):
+            x_pos = 148 + (70 * idx)
+            y_pos = 100 + (70 * (row - 1))
+            original_y_positions.append(y_pos)
+
+        # Perform the jump animation in a wave-like motion
+        for frame in range(30):  # Total frames for the animation
+            self.game.board.draw()  # Redraw the board
+            for idx, letter in enumerate(word):
+                x_pos = 148 + (70 * idx)
+                y_pos = original_y_positions[idx]
+
+                # Calculate the jump height using a sine wave effect
+                jump_offset = int(10 * abs(np.sin((frame - idx * 2) * (np.pi / 15))))  # Adjust the multiplier for wave effect
+                y_pos -= jump_offset
+                pygame.draw.rect(self.screen, (255, 255, 255), (x_pos, original_y_positions[idx] - 10, 62, 62 + 10), 0)
+
+                # Draw the box
+                pygame.draw.rect(self.screen, (108, 169, 101), (x_pos, y_pos, 62, 62), 0)
+                letter_surface = self.text_font.render(letter, True, (255, 255, 255))
+                letter_rect = letter_surface.get_rect(center=(x_pos + 31, y_pos + 35))
+                self.screen.blit(letter_surface, letter_rect)
+
+            pygame.display.update()
+            pygame.time.delay(30)  # Delay between frames
+
+        self.game.animations_running = False
 
 class Button:
     def __init__(self, label, rect, font, bg_colour, text_colour, box_type):
@@ -437,6 +478,12 @@ class Button:
         self.text_colour = text_colour
         self.box_type = box_type
 
+    def move_y(self, change):
+        self.rect.move_ip(0, change)
+        
+    def change_label(self, label):
+        self.label = label
+        
     def draw(self, screen):
         pygame.draw.rect(screen, self.bg_colour, self.rect, self.box_type, 20)
         text_surface = self.font.render(self.label, True, self.text_colour)
@@ -459,8 +506,10 @@ class DisplayScreen:
         self.button_font = pygame.font.Font('font/franklin.ttf', 15)
         self.buttons = [
             Button("Play", pygame.Rect(241, 465, 150, 40), self.button_font, (0, 0, 0), (227, 227, 225), 0),
-            Button("Exit", pygame.Rect(241, 515, 150, 40), self.button_font, (0, 0, 0), (0, 0, 0), 1),
+            Button("Play Again", pygame.Rect(241, 515, 150, 40), self.button_font, (0, 0, 0), (0, 0, 0), 1),
+            Button("Exit", pygame.Rect(241, 565, 150, 40), self.button_font, (0, 0, 0), (0, 0, 0), 1),
         ]
+        self.back_button = Button("Back", pygame.Rect(25, 25, 100, 40), self.button_font, (0, 0, 0), (0, 0, 0), 2)
         
     def run(self):
         for event in pygame.event.get():
@@ -469,6 +518,9 @@ class DisplayScreen:
             elif self.current_display == "START":
                 self.update(event)
                 self.draw_start_screen()
+            elif self.current_display == "END":
+                self.update(event)
+                self.draw_end_screen()
         
                     
     def set_game_display(self, current_display):
@@ -477,24 +529,38 @@ class DisplayScreen:
     def get_game_display(self):
         return self.current_display 
     
+    def draw_back_arrow(self):
+        self.back_button.draw(self.screen)
+    
     def handle_mouse_input(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = event.pos
-            for button in self.buttons:
-                if button.is_hovered(mouse_pos):
-                    print("Click button")
-                    if button.label == "Play":
-                        self.set_game_display("PLAY")
-                    elif button.label == "Exit":
-                        self.game.running = False
+            if self.current_display != "PAUSE":
+                for button in self.buttons:
+                    if button.is_hovered(mouse_pos):
+                        if button.label == "Play" or button.label == "Play Again":
+                            self.game.restart_game()
+                            self.set_game_display("PLAY")
+                        elif button.label == "View Stats":
+                            self.set_game_display("PAUSE")
+                        elif button.label == "Exit":
+                            self.game.running = False
+            else: 
+                if self.back_button.is_hovered(mouse_pos):
+                    self.set_game_display("END")
         
     def mouse_tracking(self):
         mouse_pos = pygame.mouse.get_pos()
-        for button in self.buttons:
-            if button.is_hovered(mouse_pos):
-                pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_HAND)
-                return
-        pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_ARROW) 
+        if self.current_display != "PAUSE":
+            for button in self.buttons:
+                if button.is_hovered(mouse_pos):
+                    pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_HAND)
+                    return
+        else:
+            if self.back_button.is_hovered(mouse_pos):
+                    pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_HAND)
+                    return
+        pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_ARROW)     
     
     def update(self, event):
         self.handle_mouse_input(event)
@@ -513,10 +579,35 @@ class DisplayScreen:
         desc_rect = desc_surface.get_rect(center = (316, 425))
         self.screen.blit(desc_surface, desc_rect)
         # start buttons
+        self.buttons[0].change_label("Play")
         for button in self.buttons:
-            button.draw(self.screen)
+            if button.label != "Play Again":
+                if button.label == "Exit" and button.rect.y == 565:
+                    button.move_y(-50)
+                button.draw(self.screen)
         pygame.display.update()
 
+    def draw_end_screen(self):
+        # was game on
+        game_won = self.game.was_game_won()
+        # wordle cube
+        self.screen.fill((227, 227, 225))
+        self.screen.blit(self.cube_surface, self.cube_rect)
+        # title
+        title_surface = self.title_font.render("Wordle", True, (0, 0, 0))
+        title_rect = title_surface.get_rect(center = (316, 380))
+        self.screen.blit(title_surface, title_rect)
+        # game desc
+        desc_surface = self.desc_font.render("You win" if game_won else "Game Over, Try Again", True, (0, 0, 0))
+        desc_rect = desc_surface.get_rect(center = (316, 425))
+        self.screen.blit(desc_surface, desc_rect)
+        # start buttons
+        self.buttons[0].change_label("View Stats")
+        for button in self.buttons:
+            if button.label == "Exit" and button.rect.y == 515:
+                button.move_y(50)
+            button.draw(self.screen)
+        pygame.display.update()
 
            
 # def animateLetter(current_row, current_word):
