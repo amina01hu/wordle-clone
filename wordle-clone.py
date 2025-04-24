@@ -49,7 +49,7 @@ class Game:
         if self.win_word != "":
             self.rounds += 1
             self.game_won = False
-        list = ['rebus', 'siege', 'banal', 'gorge', 'query', 'abbey', 'proxy', 'aloft, gauge']
+        list = ['rebus', 'siege', 'banal', 'gorge', 'query', 'abbey', 'proxy', 'aloft', 'gauge']
         self.win_word = random.choice(list).upper()
     
     def was_game_won(self):
