@@ -74,9 +74,7 @@ wordle-clone/
 
 ---
 
-## 🖼️ Screenshots
-
-### Gameplay
+## 🖼️ Gameplay
 ![Gameplay](assets/game_play.gif)
 
 ---
