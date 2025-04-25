@@ -76,14 +76,8 @@ wordle-clone/
 
 ## 🖼️ Screenshots
 
-### Start Screen
-![Start Screen](assets/start_screen.png)
-
 ### Gameplay
 ![Gameplay](assets/game_play.gif)
-
-### End Screen
-![End Screen](assets/end_screen.png)
 
 ---
 
