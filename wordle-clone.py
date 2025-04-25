@@ -13,7 +13,6 @@ class Game:
         self.board = Board(self.screen, self)
         self.keyboard = Keyboard(self.screen, self)
         self.game_won = False
-        self.rounds = 0
         self.win_word = ""
         self.all_guesses = [[]]
         self.matching_letters = []
@@ -29,7 +28,6 @@ class Game:
                 self.current_display.draw_start_screen()
             elif self.current_display.get_game_display() == "PLAY":
                 self.handle_events()
-                self.update()
                 self.draw()
             elif self.current_display.get_game_display() == "PAUSE":
                 self.draw()
@@ -47,7 +45,6 @@ class Game:
         self.all_guesses = [[]]
         self.matching_letters = []
         if self.win_word != "":
-            self.rounds += 1
             self.game_won = False
         list = ['rebus', 'siege', 'banal', 'gorge', 'query', 'abbey', 'proxy', 'aloft', 'gauge']
         self.win_word = random.choice(list).upper()
@@ -70,9 +67,6 @@ class Game:
                 self.running = False
             elif not self.animation_running:
                 self.keyboard.update(event, self.board, self.win_word)
-           
-    def update(self):
-        pass 
         
         
     def draw(self):
@@ -295,62 +289,14 @@ class Keyboard:
 
     def handle_key_input(self, event, board, win_word):
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_a:
-                board.add_letter("A")
-            elif event.key == pygame.K_b:
-                board.add_letter("B")
-            elif event.key == pygame.K_c:
-                board.add_letter("C")
-            elif event.key == pygame.K_d:
-                board.add_letter("D")
-            elif event.key == pygame.K_e:
-                board.add_letter("E")
-            elif event.key == pygame.K_f:
-                board.add_letter("F")
-            elif event.key == pygame.K_g:
-                board.add_letter("G")
-            elif event.key == pygame.K_h:
-                board.add_letter("H")
-            elif event.key == pygame.K_i:
-                board.add_letter("I")
-            elif event.key == pygame.K_j:
-                board.add_letter("J")
-            elif event.key == pygame.K_k:
-                board.add_letter("K")
-            elif event.key == pygame.K_l:
-                board.add_letter("L")
-            elif event.key == pygame.K_m:
-                board.add_letter("M")
-            elif event.key == pygame.K_n:
-                board.add_letter("N")
-            elif event.key == pygame.K_o:
-                board.add_letter("O")
-            elif event.key == pygame.K_p:
-                board.add_letter("P")
-            elif event.key == pygame.K_q:
-                board.add_letter("Q")
-            elif event.key == pygame.K_r:
-                board.add_letter("R")
-            elif event.key == pygame.K_s:
-                board.add_letter("S")
-            elif event.key == pygame.K_t:
-                board.add_letter("T")
-            elif event.key == pygame.K_u:
-                board.add_letter("U")
-            elif event.key == pygame.K_v:
-                board.add_letter("V")
-            elif event.key == pygame.K_w:
-                board.add_letter("W")
-            elif event.key == pygame.K_x:
-                board.add_letter("X")
-            elif event.key == pygame.K_y:
-                board.add_letter("Y")
-            elif event.key == pygame.K_z:
-                board.add_letter("Z")
-            elif event.key == pygame.K_BACKSPACE:
+            if event.key == pygame.K_BACKSPACE:
                 board.remove_letter()
             elif event.key == pygame.K_RETURN:
                 board.check_word(win_word)
+            else:
+                letter = pygame.key.name(event.key).upper()
+                if letter in self.all_keys:
+                    board.add_letter(letter)
 
     def mouse_tracking(self):
         x_mouse, y_mouse = pygame.mouse.get_pos()
@@ -493,9 +439,6 @@ class Button:
         self.bg_colour = bg_colour
         self.text_colour = text_colour
         self.box_type = box_type
-
-    def move_y(self, change):
-        self.rect.move_ip(0, change)
         
     def change_label(self, label):
         self.label = label
@@ -599,7 +542,7 @@ class DisplayScreen:
         for button in self.buttons:
             if button.label != "Play Again":
                 if button.label == "Exit" and button.rect.y == 565:
-                    button.move_y(-50)
+                    button.rect.y -=50
                 button.draw(self.screen)
         pygame.display.update()
 
@@ -621,7 +564,7 @@ class DisplayScreen:
         self.buttons[0].change_label("View Stats")
         for button in self.buttons:
             if button.label == "Exit" and button.rect.y == 515:
-                button.move_y(50)
+                button.rect.y += 50
             button.draw(self.screen)
         pygame.display.update()
 
