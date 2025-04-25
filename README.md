@@ -1,12 +1,12 @@
 # Wordle Clone
 
-A simple Wordle clone built with [insert technologies used, e.g., HTML, CSS, JavaScript]. This project replicates the popular word-guessing game where players have six attempts to guess a five-letter word.
+A simple Wordle clone built with Pygame using python. This project replicates the popular word-guessing game where players have six attempts to guess a five-letter word.
 
 ## Features
 - Interactive gameplay with a clean user interface.
 - Real-time feedback on guesses (correct letters, positions, etc.).
-- Word validation to ensure valid guesses.
 - Random word generation for each game session.
+- Wave-like Win Animation for winning the game
 
 ## Installation
 1. Clone the repository:
