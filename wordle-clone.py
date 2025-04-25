@@ -51,7 +51,6 @@ class Game:
             self.game_won = False
         list = ['rebus', 'siege', 'banal', 'gorge', 'query', 'abbey', 'proxy', 'aloft', 'gauge']
         self.win_word = random.choice(list).upper()
-    
     def was_game_won(self):
         return self.game_won
     
@@ -194,21 +193,38 @@ class Board:
                  
     def store_word(self, word, win_word):
         colours = []
-        indexes = []
         matching_letters = self.game.get_matching_letters()
         current_colour = (120, 124, 127)
+        
+        # Track which letters in the word have been matched
+        win_word_used = [False] * len(win_word)
+        
+        # Handle matching letters first
         for idx, letter in enumerate(word):
-            current_colour = (120, 124, 127)
             if letter == win_word[idx]: # letter is at the currnet index
                 current_colour = (108, 169, 101)
-            elif letter in win_word: # letter is somewhere in the word
-                indexes = [i for i, val in enumerate(win_word) if val == letter] # get the index of the letter in correct word
-                for index in indexes:
-                    if word[index] != win_word[index]:
-                        current_colour = (200, 182, 83)
-                    else:
-                        current_colour = (120, 124, 127)
+                win_word_used[idx] = True # mark this letter as used
+            else:
+                current_colour = (120, 124, 127)
             colours.append([letter, current_colour])
+            
+        # Handle letters as wrong position
+        for idx, letter in enumerate(word):
+            if colours[idx][1] == (108, 169, 101):
+                continue
+            if letter in win_word: # letter is somewhere in the word
+                # Find an unused occurence of letter in win_word
+                for win_idx, win_letter in enumerate(win_word):
+                    if win_letter == letter and not win_word_used[win_idx]:
+                        current_colour = (200, 182, 83)
+                        win_word_used[win_idx] = True
+                        break
+                else:
+                    current_colour = (120, 124, 127)
+            else:
+                current_colour = (120, 124, 127)   
+            colours[idx][1] = current_colour     
+            
         matching_letters.append(colours) 
         self.game.update_matching_letters(matching_letters)
                    
@@ -509,7 +525,7 @@ class DisplayScreen:
             Button("Play Again", pygame.Rect(241, 515, 150, 40), self.button_font, (0, 0, 0), (0, 0, 0), 1),
             Button("Exit", pygame.Rect(241, 565, 150, 40), self.button_font, (0, 0, 0), (0, 0, 0), 1),
         ]
-        self.back_button = Button("Back", pygame.Rect(25, 25, 100, 40), self.button_font, (0, 0, 0), (0, 0, 0), 2)
+        self.back_button = Button("Back", pygame.Rect(25, 25, 100, 40), self.button_font, (0, 0, 0), (255, 255, 255), 0)
         
     def run(self):
         for event in pygame.event.get():
@@ -598,7 +614,7 @@ class DisplayScreen:
         title_rect = title_surface.get_rect(center = (316, 380))
         self.screen.blit(title_surface, title_rect)
         # game desc
-        desc_surface = self.desc_font.render("You win" if game_won else "Game Over, Try Again", True, (0, 0, 0))
+        desc_surface = self.desc_font.render("You win" if game_won else f"Game Over, Word was: {self.game.win_word}", True, (0, 0, 0))
         desc_rect = desc_surface.get_rect(center = (316, 425))
         self.screen.blit(desc_surface, desc_rect)
         # start buttons
